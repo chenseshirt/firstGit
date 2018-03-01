@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="css/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/base.css" />
+	</head>
+
+	<body>
+		<div id="v-app" v-cloak class="order-page container-fluid">
+			<!--内容标题-->
+			<div class="page-header">
+				<h4>发票管理</h4>
+			</div>
+			<ul class="nav nav-tabs invoice-tab">
+				<li role="presentation" class="active">
+					<a class="list-group-item" v-link="{ path: '/list'}" value="1">发票列表</a>
+				</li>
+				<li role="presentation">
+					<a class="list-group-item" v-link="{ path: '/info'}" value="2">发票信息管理</a>
+				</li>
+				<li role="presentation">
+					<a class="list-group-item" v-link="{ path: '/adr'}" value="3">地址管理</a>
+				</li>
+			</ul>
+			<div class="">
+				<!--用于渲染匹配的组件-->
+				<router-view></router-view>
+			</div>
+		</div>
+		<template id="list">
+			<div>
+				<h1>发票列表</h1>
+			</div>
+			<!--发票列表-->
+			<div class="invoice-list" v-if="target == 1">
+				<p class="alert alert-danger">
+					1、发票内容统一为：*信息技术服务*技术服务费。<br /> 2、订单总金额100元以上可开具发票，少于100元时可与其他订单合并申请；
+					<br /> 3、温馨提示： 发票在开具后 3 个工作日内寄出，收到发票包裹后，请仔细检查核对后再签收，如有问题请及时拒收。<br />
+				</p>
+				<div class="invoice-search form-inline">
+					<div class="input-group w400p">
+						<span class="input-group-addon">申请时间:</span>
+						<input type="text" class="form-control" id="dateS" placeholder="">
+						<span class="input-group-addon">至</span>
+						<input type="text" class="form-control" id="dateE" placeholder="">
+					</div>
+					<div class="input-group w200p">
+						<span class="input-group-addon">发票抬头:</span>
+						<input type="text" class="form-control invoice-title" placeholder="">
+					</div>
+					<button class="btn btn-info" type="button">查询</button>
+				</div>
+				<table class="mes-table table table-header table-hover">
+					<thead>
+						<tr>
+							<th class="w15">发票号</th>
+							<th class="w15">申请时间</th>
+							<th class="w15">发票抬头</th>
+							<th class="w10">金额(元)</th>
+							<th class="w15">快递单号</th>
+							<th class="w15">状态</th>
+							<th class="w5">操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="order-list" v-for="value in invoiceInfo" v-bind:class="{paid: !value.status }">
+							<td>{{value.number}}</td>
+							<td>{{value.time}}</td>
+							<td>{{value.title}}</td>
+							<td>{{value.money}}</td>
+							<td>{{value.expressNum}}</td>
+							<td>{{value.status}}</td>
+							<td>
+								<a class="order-detail" v-bind:value="value.id" href="###">详情</a>
+							</td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="7">
+								<ul class="pagination pull-right">
+									<li class="left-end">
+										<a v-bind:value="1" href="javascript：void(0);" class=""><span aria-hidden="true">&laquo;</span></a>
+									</li>
+									<li class="left-end">
+										<a value="down" href="javascript：void(0);" class=""><span aria-hidden="true">&lsaquo;</span></a>
+									</li>
+									<!--<li class="active"><li>-->
+									<li v-for="n in pageIndexCount" class="pageIndex" v-bind:class="{active: n == pageIndex }">
+										<a v-bind:value="n" href="javascript：void(0);">{{n}}</a>
+									</li>
+									<li class="right-end">
+										<a value="up" href="javascript：void(0);" class=""><span aria-hidden="true">&rsaquo;</span></a>
+									</li>
+									<li class="right-end">
+										<a v-bind:value="pageIndexCount" href="javascript：void(0);" class=""><span aria-hidden="true">&raquo;</span></a>
+									</li>
+								</ul>
+								<div class="pagination-info pull-right">共有条，每页显示：10条</div>
+							</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</template>
+		<template id="info">
+			<div>
+				<h1>发票信息管理</h1>
+			</div>
+			<!--发票信息管理-->
+			<div class="invoice-mes" v-if="target == 2">
+				<p class="alert alert-danger">
+					温馨提示： 开具发票前，需先设置发票模板。
+				</p>
+				<div class="">
+					<!--<lable for="name">基本信息</lable>-->
+					<dl class="dl-horizontal row">
+						<div class="col-xs-12 col-sm-8">
+							<dt>发票类型：</dt>
+							<dd>增值税普通发票</dd>
+							<dd>如果您是具有一般纳税人资格的用户，可在依次通过
+								<a href="###">企业或组织的实名认证</a> 和
+								<a href="###">专票认证</a> 后，申请增值税专用发票</dd>
+							<dt><span class="asterisk">*</span>普票类型 ：</dt>
+							<dd class="">
+								<label class="">
+							<input type="radio" name="option" id="" v-model="invoiceRole" value="1">
+							个人
+						</label>
+								<label class="">
+							<input type="radio" name="option" id="" v-model="invoiceRole" value="2">
+							企业/政府（含企业、政府、事业单位、团体、组织）
+						</label>
+							</dd>
+							<!--发票抬头-->
+							<dt><span class="asterisk">*</span>发票抬头 ：</dt>
+							<dd class="">
+								<input type="text" class="form-control" placeholder="">
+							</dd>
+						</div>
+						<div class="col-xs-12 col-sm-8" v-if="invoiceRole == 2">
+							<div class="">
+								<dt><span class="asterisk">*</span>纳税人识别号 ：</dt>
+								<dd class="">
+									<input type="text" class="form-control" placeholder="">
+								</dd>
+								<dd>请填写纳税人识别号或统一社会信用代码号，若您是其他组织机构，请填写组织机构代码证上的编号</dd>
+							</div>
+							<div class="">
+								<dt>开户银行名称 ：</dt>
+								<dd class="">
+									<input type="text" class="form-control" placeholder="">
+								</dd>
+							</div>
+							<div class="">
+								<dt>开户账号 ：</dt>
+								<dd class="">
+									<input type="text" class="form-control" placeholder="">
+								</dd>
+							</div>
+							<div class="">
+								<dt>地址 ：</dt>
+								<dd class="">
+									<input type="text" class="form-control" placeholder="">
+								</dd>
+							</div>
+							<div class="">
+								<dt>电话 ：</dt>
+								<dd class="">
+									<input type="text" class="form-control" placeholder="">
+								</dd>
+							</div>
+						</div>
+						<div class="col-xs-12 col-sm-8">
+							<dd><button class="btn btn-info" type="button">保存修改</button></dd>
+						</div>
+					</dl>
+				</div>
+			</div>
+		</template>
+		<template id="adr">
+			<div>
+				<h1>地址管理</h1>
+			</div>
+			<!--发票地址管理-->
+			<div class="invoice-adr" v-if="target == 3">
+				<p class="alert alert-danger">温馨提示： 已保存{{invoiceInfo.length}}条地址，还能保存 {{b}} 条地址</p>
+				<table class="mes-table table table-header table-hover">
+					<thead>
+						<tr>
+							<th class="w15">收件人姓名</th>
+							<th class="w15">电话号码</th>
+							<th class="w30">地址</th>
+							<th class="w15">邮编</th>
+							<th class="w25">操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="invoice-adr" v-for="value in invoiceInfo" v-bind:class="{paid: !value.status }">
+							<td>{{value.name}}</td>
+							<td>{{value.phone}}</td>
+							<td>{{value.province}} - {{value.city}} - {{value.county}} {{value.street}}</td>
+							<td>{{value.postCode}}</td>
+							<td>
+								<!--<a class="setDefault" v-if="!value.defaultAdr" v-on:click="setAdrDefault(value.id)" href="javascript:void(0)">设为默认</a>-->
+								<a class="setDefault" v-if="!value.defaultAdr" href="javascript:void(0)">设为默认</a>
+								<a class="setDefault text-green" v-if="value.defaultAdr" href="javascript:void(0)">默认地址</a>
+								<a class="" href="javascript:void(0)" v-on:click="changeAdr(value.id)">修改</a>
+								<a class="" href="javascript:void(0)" v-on:click="toDelAdr(value.id)">删除</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div><button class="btn btn-info" href="#myModal-addAdr" data-toggle="modal" type="button"><span class="glyphicon glyphicon-plus"></span>新增地址</button></div>
+			</div>
+		</template>
+	</body>
+	<script src="js/vue.js"></script>
+	<script src="js/vue-router.js"></script>
+	<script>
+		/* 创建组件构造器  */
+		var List = Vue.extend({
+			template: '#list'
+		})
+		var Info = Vue.extend({
+			template: '#info'
+		})
+		var Adr = Vue.extend({
+			template: '#adr'
+		})
+
+		/* 创建路由器  */
+		var router = new VueRouter()
+
+		/* 创建路由映射  */
+		router.map({
+			'/list': {
+				component: List
+			},
+			'/info': {
+				component: Info
+			},
+			'/adr': {
+				component: Adr
+			}
+		})
+
+		router.redirect({
+			'/': '/list'
+		})
+
+		/* 启动路由  */
+		var App = Vue.extend({})
+		router.start(App, '#v-app')
+	</script>
+
+</html>

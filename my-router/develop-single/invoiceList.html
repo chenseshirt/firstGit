@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1, user-scalable=no">
+		<title>实名认证</title>
+		<link href="css/bootstrap.min.css" title="" rel="stylesheet" />
+		<link href="css/default.css" rel="stylesheet" type="text/css" />
+		<link href="css/usercenter.css" rel="stylesheet" title="" type="text/css" />
+		<script src="script/jquery-2.2.4.min.js"></script>
+		<script src="script/bootstrap.min.js" type="text/javascript"></script>
+		<script src="script/vue.min.js"></script>
+		<script src="script/vue-resource.js"></script>
+		<!--http://www.sinacloud.com/ucenter/alert.html?from=sidebar-->
+	</head>
+
+	<body>
+<script src="libs/jquery.cityselect.js" type="text/javascript" ></script>
+<style type="text/css">
+	.search-box {
+		/*border: 1px solid red;*/
+		/*width: 150px;*/
+	}
+	.alert-danger{
+		margin-top: 20px;
+	}
+</style>
+<!--右侧内容-->
+
+	
+	
+
+	<!--添加地址按钮，弹出模态框-->
+	<div class="modal fade " id="myModal-addAdr" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">新增地址</h4>
+				</div>
+				<div class="modal-body">
+					<form class="form-horizontal" role="form" autocomplete="off">
+						<div class="form-group">
+							<label for="" class="col-sm-3 control-label">收件人姓名 :</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" placeholder="" autocomplete="name">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-sm-3 control-label">所在地区 :</label>
+							<div id="choose-city" class="form-inline col-sm-9">
+								<select class="prov form-control"></select>
+								<select class="city form-control" disabled="disabled"></select>
+								<select class="dist form-control" disabled="disabled"></select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-sm-3 control-label">街道地址 :</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" autocomplete="add">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-sm-3 control-label">邮政编码 :</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" autocomplete="post">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-sm-3 control-label">手机号 :</label>
+							<div class="col-sm-9">
+								<input type="text" class="form-control" autocomplete="name">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-9 col-sm-offset-3">
+								<label><input type="checkbox" value="true">设为默认</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" value="" class="agree btn btn-info">确定</button>
+					<button type="button" class="disagree btn btn-default" data-dismiss="modal">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--模态框结束-->
+	<!--删除地址按钮，弹出模态框-->
+	<div class="modal fade " id="myModal-delAdr" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">删除提示</h4>
+				</div>
+				<div class="modal-body">
+					<p>确认删除此地址？{{handleID}}</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" @click="sureDelAdr()" class="agree btn btn-info">确定</button>
+					<button type="button" class="disagree btn btn-default" data-dismiss="modal">取消</button> 
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--模态框结束-->
+
+
+<script type="text/javascript">
+	var v = new Vue({
+		el: '#v-app',
+		data: {
+			target:"2", //tab切换
+			//tab1
+			statusArr: ["全部", "未审核", "已通过", "已拒绝", "已开具", "已作废","已寄送","已撤回"], //存储发票状态
+			invoiceInfo: [], //接受请求数据中的data
+			pageIndexCount: "", //接受总共页数
+			pageIndex: "", //接受当前页面消息第几页
+			//tab2
+			invoiceRole: '1', //信息，默认为个人
+			//mesident
+			handleID: '0',//存储操作ID
+			/*identYes: false,
+			identYesType: '0',
+			identType: '1',
+		
+			selectCount: "", //选中条数，供模态框显示
+			selectTodo: "", //选中之后，何种操作
+			mesOne: "", //接受点击的消息*/
+			//"deliveryAdr": "浙江省杭州市天目山路",
+			
+			invoiceData: {
+				type: "GET",
+				url: "moni/expense/invoiceAdr.json",
+				successDo: function(data) {
+					var myData = data;
+					v.invoiceInfo = myData.data.data;
+					console.log(myData);
+					console.log(v.invoiceInfo);
+					for(var i = 0; i < v.invoiceInfo.length; i++) {
+						v.invoiceInfo[i].status = v.statusArr[v.invoiceInfo[i].status - 1];
+					}
+				},
+				error: function(data) {
+					console.log("wrong")
+				},
+			},
+		},
+		methods: {
+			//设置默认地址
+			setAdrDefault: function(id){
+				console.log("1111111" + id);
+				console.log("1111111" + this);
+				console.log(this);
+				var AdrDefaultData = {
+					type: "POST",
+					url: "member/invitaion/del/" + id,
+					//url: "moni/mem.json",
+					successDo: function(data) {
+						var myData = data;
+						console.log(myData);
+						console.log(myData.data);
+						$del.remove();
+						//直接访问原生对象
+					},
+					error: function(data) {
+						console.log("wrong");
+					},
+				}
+				console.log(delAdrData);
+				//myAjax.myReq(deljoinedData);
+			},
+			toDelAdr: function(id){
+				$("#myModal-delAdr").modal("show");
+				this.handleID = id;
+				console.log(this.handleID);
+			},
+			sureDelAdr: function(){
+				var delAdrData = {
+					type: "POST",
+					url: "member/invitaion/del/" + this.handleID,
+					//url: "moni/mem.json",
+					successDo: function(data) {
+						var myData = data;
+						console.log(myData);
+						console.log(myData.data);
+						$del.remove();
+						//直接访问原生对象
+					},
+					error: function(data) {
+						console.log("wrong");
+					},
+				}
+				console.log(delAdrData);
+				//myAjax.myReq(deljoinedData);
+			}
+		},
+		computed: {
+            b: function () {
+                return 10 - this.invoiceInfo.length;
+            }
+        },
+		created: function() {
+			myAjax.myJsonTest(this.invoiceData);
+			//myAjax.myReq(this.getMesData);
+			//myAjax.myReq(this.typeData);
+		},
+		updated: function(){
+			/*v-if实现tab切换,每一次切换都是重新渲染dom,
+			放在mounted中只绑定一次,放在updated中,每次更新后都会绑定*/
+			laydate.render({elem: '#dateS',theme: '#393D49'});
+			laydate.render({elem: '#dateE',theme: '#393D49'});
+			console.log(v.invoiceRole);
+			$("#choose-city").citySelect({
+				url: "libs/city.min.js",
+				prov: "北京",
+				nodata:"none" //当子集无数据时，隐藏select
+				//required: false,//是否必选
+			});
+			//设置默认地址
+			$(".setDefault").click(function(){
+				$(".invoice-adr .text-green").text("设为默认").css("color","#0066CC").removeClass("text-green");
+				$(this).text("默认地址").css("color","#44b333").addClass("text-green");
+			});
+		},
+		mounted: function() {
+			$(".invoice-tab li").click(function(){
+				console.log(this);
+				$(".invoice-tab li").removeClass("active");
+				$(this).addClass("active");
+			});
+			$(".invoice-tab a").click(function(){
+				console.log(this);
+				v.target = $(this).attr("value");		
+				console.log(v.target);
+			});
+		}
+	});
+	$(function() {
+		//laydate.render({elem: '#dateStart'});
+	});
+</script>
+</body>
+
+</html>
